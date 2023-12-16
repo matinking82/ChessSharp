@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32210.238
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChessKing.Models", "ChessKing.Models\ChessKing.Models.csproj", "{92EE4F67-9CF5-4776-9C9A-5081FF3FD9F3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "TestConsole\TestConsole.csproj", "{A619405F-17EB-4C98-B26A-3DB041C13CB6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{92EE4F67-9CF5-4776-9C9A-5081FF3FD9F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92EE4F67-9CF5-4776-9C9A-5081FF3FD9F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92EE4F67-9CF5-4776-9C9A-5081FF3FD9F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92EE4F67-9CF5-4776-9C9A-5081FF3FD9F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A619405F-17EB-4C98-B26A-3DB041C13CB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A619405F-17EB-4C98-B26A-3DB041C13CB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A619405F-17EB-4C98-B26A-3DB041C13CB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A619405F-17EB-4C98-B26A-3DB041C13CB6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9643628D-0D02-428B-9D41-80FECAAB7DFD}
+	EndGlobalSection
+EndGlobal
