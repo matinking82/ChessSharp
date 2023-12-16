@@ -20,7 +20,7 @@ namespace ChessKing.Models
         public bool WhiteLongCastle { get; set; }
         public bool BlackShortCastle { get; set; }
         public bool BlackLongCastle { get; set; }
-        private ChessSquare EnPassantSquare;
+        private ChessSquare? EnPassantSquare = null;
 
         private List<List<ChessSquare>> _squares;
 
@@ -32,7 +32,31 @@ namespace ChessKing.Models
             SetFEN(FEN);
         }
 
-        public void Move(string pgnMove)
+        private List<List<ChessSquare>> copySquares()
+        {
+            List<List<ChessSquare>> squaresCopy = new List<List<ChessSquare>>();
+            foreach (var row in _squares)
+            {
+                List<ChessSquare> rowCopy = new List<ChessSquare>();
+                foreach (var square in row)
+                {
+                    var cp = new ChessSquare()
+                    {
+                        PieceId = square.PieceId
+                    };
+                    if (EnPassantSquare == square)
+                    {
+                        EnPassantSquare = cp;
+                    }
+                    rowCopy.Add(cp);
+                }
+                squaresCopy.Add(rowCopy);
+            }
+
+            return squaresCopy;
+        }
+
+        public bool Move(string pgnMove)
         {
             pgnMove = pgnMove.Replace("+", "");
             pgnMove = pgnMove.Replace("#", "");
@@ -41,8 +65,9 @@ namespace ChessKing.Models
             pgnType Type = GetPgnType(pgnMove);
             var pieces = GetAllPiecesForColor(WhitesTurn);
 
-            string StartSquare = "";
+            string? StartSquare = "";
             string EndSquare = "";
+            string? promote = null;
 
             switch (Type)
             {
@@ -62,12 +87,9 @@ namespace ChessKing.Models
 
                     StartSquare = pieces
                         .Where(p => this[p].PieceId == pawnId)
-                        .Where(p => AvailableSquares(p).Contains(EndSquare))
-                        .First();
-
+                        .FirstOrDefault(p => AvailableSquares(p).Contains(EndSquare));
 
                     break;
-
                 case pgnType.PieceMove1://Ba4
 
                     EndSquare = pgnMove.Substring(1, 2);
@@ -80,7 +102,8 @@ namespace ChessKing.Models
                     StartSquare = pieces
                         .Where(p => this[p].PieceId == PieceId)
                         .Where(p => AvailableSquares(p).Contains(EndSquare))
-                        .First();
+                        .FirstOrDefault();
+
 
                     break;
                 case pgnType.PieceMove2://Bba4
@@ -106,7 +129,7 @@ namespace ChessKing.Models
 
                         if (FoundPieces.Select(p => this[p]).Contains(item))
                         {
-                            StartSquare = GetSquareName(new Tuple<int, int>(file,i));
+                            StartSquare = GetSquareName(new Tuple<int, int>(file, i));
                             break;
                         }
                     }
@@ -140,31 +163,54 @@ namespace ChessKing.Models
                     }
                     break;
                 case pgnType.PieceMove4:
-                    StartSquare = pgnMove.Substring(1,2);
+                    StartSquare = pgnMove.Substring(1, 2);
                     EndSquare = pgnMove.Substring(3, 2);
                     PieceId = Pieces.IndexOf(pgnMove[0].ToString());
 
-                    if (this[StartSquare].PieceId!=PieceId)
+                    if (this[StartSquare].PieceId != PieceId)
                     {
-                        return;
+                        StartSquare = "";
                     }
 
                     break;
                 case pgnType.PawnPromote:
+
+                    promote = pgnMove.Split("=")[1];
+                    pgnMove = pgnMove.Split("=")[0];
+
+                    EndSquare = pgnMove;
+                    if (pgnMove.Length == 3)
+                    {
+                        EndSquare = pgnMove.Substring(1, 2);
+                    }
+
+                    int PawnId = 0;
+                    if (!WhitesTurn)
+                    {
+                        PawnId = 6;
+                    }
+
+                    StartSquare = pieces
+                        .Where(p => this[p].PieceId == PawnId)
+                        .FirstOrDefault(p => AvailableSquares(p).Contains(EndSquare));
+
                     break;
                 default:
                     break;
             }
 
-            MoveSquare(StartSquare, EndSquare);
+            if (string.IsNullOrEmpty(StartSquare))
+            {
+                return false;
+            }
 
-            WhitesTurn = !WhitesTurn;
+            return MoveSquare(StartSquare, EndSquare, promote);
         }
 
         public List<string> AvailableSquares(string startSquare, bool atack = false)
         {
             ChessSquare Square = this[startSquare];
-
+            List<string> Availables = new List<string>();
             switch (Square.PieceId)
             {
                 case 0://pawn
@@ -172,58 +218,98 @@ namespace ChessKing.Models
                     {
                         return PawnAtackedSquares(startSquare);
                     }
-                    return PawnAvailableSquares(startSquare);
+                    Availables = PawnAvailableSquares(startSquare);
                     break;
                 case 1://knight
-                    return knightAvailableSquares(startSquare, atack);
+                    Availables = knightAvailableSquares(startSquare, atack);
                     break;
                 case 2://bishop
-                    return BishopAvailableSquares(startSquare, atack);
+                    Availables = BishopAvailableSquares(startSquare, atack);
                     break;
                 case 3://rook
-                    return RookAvailableSquares(startSquare, atack);
+                    Availables = RookAvailableSquares(startSquare, atack);
                     break;
                 case 4://queen
-                    return QueenAvailableSquares(startSquare, atack);
+                    Availables = QueenAvailableSquares(startSquare, atack);
                     break;
                 case 5://king
                     if (atack)
                     {
                         return KingAtackedSquares(startSquare);
                     }
-                    return KingAvailableSquares(startSquare);
+                    Availables = KingAvailableSquares(startSquare);
                     break;
                 case 6://pawn
                     if (atack)
                     {
                         return PawnAtackedSquares(startSquare);
                     }
-                    return PawnAvailableSquares(startSquare);
+                    Availables = PawnAvailableSquares(startSquare);
                     break;
                 case 7://knight
-                    return knightAvailableSquares(startSquare, atack);
+                    Availables = knightAvailableSquares(startSquare, atack);
                     break;
                 case 8://bishop
-                    return BishopAvailableSquares(startSquare, atack);
+                    Availables = BishopAvailableSquares(startSquare, atack);
                     break;
                 case 9://rook
-                    return RookAvailableSquares(startSquare, atack);
+                    Availables = RookAvailableSquares(startSquare, atack);
                     break;
                 case 10://queen
-                    return QueenAvailableSquares(startSquare, atack);
+                    Availables = QueenAvailableSquares(startSquare, atack);
                     break;
                 case 11://king
                     if (atack)
                     {
                         return KingAtackedSquares(startSquare);
                     }
-                    return KingAvailableSquares(startSquare);
+                    Availables = KingAvailableSquares(startSquare);
                     break;
                 default:
                     break;
             }
 
-            throw new NotImplementedException();
+            if (!atack)
+            {
+                Availables = Availables.Where(EndSquare =>
+                {
+                    var original = _squares;
+                    var exen = EnPassantSquare;
+                    _squares = copySquares();
+                    var StartChessSquare = this[startSquare];
+                    if (StartChessSquare.PieceName == "p" || StartChessSquare.PieceName == "P")
+                    {
+                        if (startSquare.ElementAt(0) != EndSquare.ElementAt(0))
+                        {
+                            if (this[EndSquare].PieceId == null)
+                            {
+                                string square = $"{EndSquare.ElementAt(0)}{startSquare.ElementAt(1)}";
+
+
+                                this[square].PieceId = null;
+                            }
+                        }
+                    }
+                    this[EndSquare].PieceId = StartChessSquare.PieceId;
+                    StartChessSquare.PieceId = null;
+
+
+                    if (IsCheck(IsWhitePiece(this[EndSquare])))
+                    {
+                        _squares = original;
+                        EnPassantSquare = exen;
+                        return false;
+                    }
+                    else
+                    {
+                        _squares = original;
+                        EnPassantSquare = exen;
+                        return true;
+                    }
+                }).ToList();
+            }
+
+            return Availables;
         }
 
         public ChessSquare this[string key]
@@ -253,21 +339,99 @@ namespace ChessKing.Models
             _squares = Squares;
         }
 
-        private bool MoveSquare(string startSquare, string EndSquare)
+        private bool MoveSquare(string startSquare, string EndSquare, string? promote, bool checkAvailable = true)
         {
             var StartChessSquare = this[startSquare];
 
-            var AvailableSquares = this.AvailableSquares(startSquare);
-
-            if (!AvailableSquares.Contains(EndSquare))
+            if (checkAvailable)
             {
-                return false;
+                var AvailableSquares = this.AvailableSquares(startSquare);
+
+                if (!AvailableSquares.Contains(EndSquare))
+                {
+                    return false;
+                }
             }
 
-            this[EndSquare].PieceId = StartChessSquare.PieceId;
+            EnPassantSquare = null;
+
+
+            if (StartChessSquare.PieceName == "p" || StartChessSquare.PieceName == "P")
+            {
+                if (startSquare.ElementAt(0) == EndSquare.ElementAt(0))
+                {
+                    int distance = Math.Abs(int.Parse(startSquare.ElementAt(1).ToString()) - int.Parse(EndSquare.ElementAt(1).ToString()));
+                    if (distance == 2)
+                    {
+                        string square =
+                            $"{startSquare.ElementAt(0)}{(int.Parse(startSquare.ElementAt(1).ToString()) + int.Parse(EndSquare.ElementAt(1).ToString())) / 2}";
+
+                        EnPassantSquare = this[square];
+                    }
+                }
+                else
+                {
+                    if (this[EndSquare].PieceId == null)
+                    {
+                        string square = $"{EndSquare.ElementAt(0)}{startSquare.ElementAt(1)}";
+
+                        this[square].PieceId = null;
+                    }
+                }
+            }
+
+            if (StartChessSquare.PieceName == "K")
+            {
+                if (startSquare == "e1")
+                {
+                    if (EndSquare == "g1")
+                    {
+                        this["h1"].PieceId = null;
+                        this["f1"].PieceId = 3;
+                    }
+                    else if (EndSquare == "c1")
+                    {
+                        this["a1"].PieceId = null;
+                        this["d1"].PieceId = 3;
+                    }
+                }
+            }
+
+            if (StartChessSquare.PieceName == "k")
+            {
+                if (startSquare == "e8")
+                {
+                    if (EndSquare == "g8")
+                    {
+                        this["h8"].PieceId = null;
+                        this["f8"].PieceId = 9;
+                    }
+                    else if (EndSquare == "c8")
+                    {
+                        this["a8"].PieceId = null;
+                        this["d8"].PieceId = 9;
+                    }
+                }
+            }
+
+            if (promote == null)
+            {
+                this[EndSquare].PieceId = StartChessSquare.PieceId;
+            }
+            else
+            {
+                int pieceId = Pieces.IndexOf(promote);
+                if (!WhitesTurn)
+                {
+                    pieceId += 6;
+                }
+
+                this[EndSquare].PieceId = pieceId;
+            }
 
             StartChessSquare.PieceId = null;
 
+            WhitesTurn = !WhitesTurn;
             return true;
         }
 
@@ -330,6 +494,7 @@ namespace ChessKing.Models
                     }
                 }
             }
+
 
 
             return AvailableSquares;
@@ -1012,7 +1177,7 @@ namespace ChessKing.Models
             return pgnType.error;
         }
 
-        private Tuple<int, int> GetCoordinate(string SquareName)
+        public static Tuple<int, int> GetCoordinate(string SquareName)
         {
             Regex regex = new Regex("^[a-h]{1}[1-8]{1}$");
 
@@ -1053,9 +1218,69 @@ namespace ChessKing.Models
             return false;
         }
 
-        private string GetSquareName(Tuple<int, int> Coordinate)
+        public static string GetSquareName(Tuple<int, int> Coordinate)
         {
             return $"{FileNames[Coordinate.Item1]}{Coordinate.Item2 + 1}";
+        }
+
+        private List<string> GetAllAvailableMovesForColor(bool white = true)
+        {
+            List<string> moves = new List<string>();
+            foreach (var file in FileNames)
+            {
+                for (int i = 1; i <= 8; i++)
+                {
+                    var name = $"{file}{i}";
+                    var Square = this[name];
+                    if (Square.PieceId == null)
+                    {
+                        continue;
+                    }
+
+                    if (white && Square.PieceId < 6)
+                    {
+                        moves.AddRange(AvailableSquares(name));
+                    }
+                    else if (!white && Square.PieceId >= 6)
+                    {
+                        moves.AddRange(AvailableSquares(name));
+                    }
+                }
+            }
+
+            moves = moves.Distinct().ToList();
+
+            return moves;
+        }
+
+        public GameStatus Status()
+        {
+            bool check = IsCheck(WhitesTurn);
+            var moves = GetAllAvailableMovesForColor(WhitesTurn);
+
+            if (check)
+            {
+                if (moves.Count==0)
+                {
+                    if (WhitesTurn)
+                    {
+                        return GameStatus.BlackMate;
+                    }
+
+                    return GameStatus.WhiteMate;
+                }
+
+                return GameStatus.Playing;
+            }
+            else
+            {
+                if (moves.Count==0)
+                {
+                    return GameStatus.StaleMate;
+                }
+
+                return GameStatus.Playing;
+            }
         }
 
         private enum pgnType
@@ -1090,5 +1315,13 @@ namespace ChessKing.Models
                 return Pieces[PieceId.Value];
             }
         }
+    }
+
+    public enum GameStatus
+    {
+        Playing,
+        StaleMate,
+        BlackMate,
+        WhiteMate
     }
 }
