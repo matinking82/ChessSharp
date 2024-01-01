@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using System.Linq;
+using ChessKing.Models.DataStructures.GameTree;
 
 namespace ChessKing.Models
 {
@@ -10,7 +11,7 @@ namespace ChessKing.Models
             "P","N","B","R","Q","K",
             "p","n","b","r","q","k",
         };
-        private static List<string> FileNames = new List<string>()
+        public static List<string> FileNames = new List<string>()
             {
                 "a", "b", "c", "d", "e", "f", "g", "h"
             };
@@ -20,16 +21,19 @@ namespace ChessKing.Models
         public bool WhiteLongCastle { get; set; }
         public bool BlackShortCastle { get; set; }
         public bool BlackLongCastle { get; set; }
+        private int halfmoves = 0;
+        private int fullmoves = 1;
         private ChessSquare? EnPassantSquare = null;
+        public GameTree Moves { get; }
 
         private List<List<ChessSquare>> _squares;
-
 
 
         public Board(string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq")
         {
             InitializeBoard();
             SetFEN(FEN);
+            Moves = new GameTree(FEN);
         }
 
         private List<List<ChessSquare>> copySquares()
@@ -66,7 +70,7 @@ namespace ChessKing.Models
             var pieces = GetAllPiecesForColor(WhitesTurn);
 
             string? StartSquare = "";
-            string EndSquare = "";
+            string? EndSquare = "";
             string? promote = null;
 
             switch (Type)
@@ -166,6 +170,10 @@ namespace ChessKing.Models
                     StartSquare = pgnMove.Substring(1, 2);
                     EndSquare = pgnMove.Substring(3, 2);
                     PieceId = Pieces.IndexOf(pgnMove[0].ToString());
+                    if (!WhitesTurn)
+                    {
+                        PieceId += 6;
+                    }
 
                     if (this[StartSquare].PieceId != PieceId)
                     {
@@ -321,8 +329,93 @@ namespace ChessKing.Models
         }
 
 
-
         ///////////////////////////////////////////
+        public string GetFEN()
+        {
+            string fen = "";
+            for (int row = 0; row < 8; row++)
+            {
+                string rowfen = "";
+                int number = 0;
+                for (int i = 0; i < 8; i++)
+                {
+                    var sqr = _squares[i][row];
+                    if (sqr.PieceId == null)
+                    {
+                        number++;
+                    }
+                    else
+                    {
+                        if (number != 0)
+                        {
+                            rowfen += number.ToString();
+                            number = 0;
+                        }
+
+                        rowfen += sqr.PieceName;
+                    }
+                }
+
+                if (number != 0)
+                {
+                    rowfen += number.ToString();
+                }
+
+                fen += rowfen;
+                if (row <= 7)
+                {
+                    fen += '/';
+                }
+            }
+
+            if (WhitesTurn)
+            {
+                fen += " w ";
+            }
+            else
+            {
+                fen += " b ";
+            }
+
+            if (WhiteShortCastle)
+            {
+                fen += "K";
+            }
+
+            if (WhiteLongCastle)
+            {
+                fen += "Q";
+            }
+
+            if (BlackShortCastle)
+            {
+                fen += "k";
+            }
+
+            if (BlackLongCastle)
+            {
+                fen += "q";
+            }
+
+            if (EnPassantSquare != null)
+            {
+                fen += " " + EnPassantSquare.PieceName + " ";
+            }
+            else
+            {
+                fen += " - ";
+            }
+
+            fen += halfmoves + " ";
+            fen += fullmoves;
+            return fen;
+        }
+
+        public void SetActivePosition(GameTreeNode position)
+        {
+            Moves.Active = position;
+            SetFEN(position.FEN);
+        }
 
         private void InitializeBoard()
         {
@@ -395,6 +488,9 @@ namespace ChessKing.Models
                         this["d1"].PieceId = 3;
                     }
                 }
+
+                WhiteLongCastle = false;
+                WhiteShortCastle = false;
             }
 
             if (StartChessSquare.PieceName == "k")
@@ -412,7 +508,12 @@ namespace ChessKing.Models
                         this["d8"].PieceId = 9;
                     }
                 }
+
+                BlackLongCastle = false;
+                BlackShortCastle = false;
             }
+
+            bool take = this[EndSquare].PieceId != null;
 
             if (promote == null)
             {
@@ -427,6 +528,30 @@ namespace ChessKing.Models
                 }
 
                 this[EndSquare].PieceId = pieceId;
+            }
+
+            var newMove = new GameTreeNode()
+            {
+                StartSquare = startSquare,
+                EndSquare = EndSquare,
+                PieceName = StartChessSquare.PieceName,
+                FEN = GetFEN()
+            };
+
+            Moves.NewMove(newMove);
+
+            if (take)
+            {
+                halfmoves = 0;
+            }
+            else
+            {
+                halfmoves++;
+            }
+
+            if (!WhitesTurn)
+            {
+                fullmoves++;
             }
 
             StartChessSquare.PieceId = null;
@@ -1201,7 +1326,7 @@ namespace ChessKing.Models
             return true;
         }
 
-        private bool IsWhitePiece(ChessSquare square)
+        public bool IsWhitePiece(ChessSquare square)
         {
             return square.PieceId <= 5;
         }
@@ -1260,7 +1385,7 @@ namespace ChessKing.Models
 
             if (check)
             {
-                if (moves.Count==0)
+                if (moves.Count == 0)
                 {
                     if (WhitesTurn)
                     {
@@ -1274,7 +1399,7 @@ namespace ChessKing.Models
             }
             else
             {
-                if (moves.Count==0)
+                if (moves.Count == 0)
                 {
                     return GameStatus.StaleMate;
                 }
