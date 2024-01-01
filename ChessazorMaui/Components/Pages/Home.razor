@@ -1,0 +1,135 @@
+﻿@page "/"
+@using ChessKing.Models
+@inject IJSRuntime JsRuntime;
+
+<PageTitle>Chessazor</PageTitle>
+
+<div class="grid-board" id="Board">
+    @{
+        bool check = false;
+        List<string> classes = new List<string>();
+    }
+    @for (int i = 8; i > 0; i--)
+    {
+        foreach (var file in Board.FileNames)
+        {
+            classes = new() { "ChessSquare" };
+            var name = $"{file}{i}";
+            var piece = board[name];
+
+            @if (AllowedSquares.Contains(name))
+            {
+                if (check)
+                {
+                    classes.Add("AllowedSquare2");
+                }
+                else
+                {
+                    classes.Add("AllowedSquare1");
+                }
+            }
+
+            @if (check)
+            {
+                classes.Add("SquareColor2");
+            }
+            else
+            {
+                classes.Add("SquareColor1");
+            }
+
+            if (piece.PieceId != null)
+            {
+                classes.Add("ChessSquareFull");
+            }
+
+            @if (name == StartSquare)
+            {
+                classes.Add("SquareSelected");
+            }
+
+            <div @onclick="() => { if(piece.PieceId!=null||AllowedSquares.Contains(name)) SquareSelect(name); }" class="@(classes.Aggregate((a,b)=>a+" "+b+" "))">
+                @if (piece.PieceId != null)
+                {
+                    <img src="pieces/@(Board.Pieces.IndexOf(piece.PieceName)+1).png" />
+                }
+            </div>
+
+            check = !check;
+        }
+        check = !check;
+    }
+</div>
+
+<span>
+    @text
+</span>
+
+
+@code
+{
+    Board board = new Board();
+
+    string text = "";
+
+    List<string> AllowedSquares = new List<string>();
+
+    string StartSquare = "";
+
+    void SquareSelect(string name)
+    {
+        var square = board[name];
+
+        if (string.IsNullOrEmpty(StartSquare))
+        {
+            if (board.IsWhitePiece(square) != board.WhitesTurn)
+            {
+                return;
+            }
+            AllowedSquares = board.AvailableSquares(name);
+            StartSquare = name;
+        }
+        else
+        {
+            var stsquare = board[StartSquare];
+            if (name == StartSquare)
+            {
+                StartSquare = "";
+                AllowedSquares = new();
+            }
+            else
+            {
+                if (AllowedSquares.Contains(name))
+                {
+                    string pgnmove = "";
+                    if (stsquare.PieceName == "P" || stsquare.PieceName == "p")
+                    {
+                        pgnmove = name;
+                        if (StartSquare.ElementAt(0) != name.ElementAt(0))
+                        {
+                            pgnmove = StartSquare.Substring(0, 1) + pgnmove;
+                        }
+                    }
+                    else
+                    {
+                        pgnmove = $"{stsquare.PieceName.ToUpper()}{StartSquare}{name}";
+                    }
+
+                    var status = board.Move(pgnmove);
+                    if (status)
+                    {
+                        StartSquare = "";
+                        AllowedSquares = new();
+                    }
+                }
+                else if (board.IsWhitePiece(square) == board.WhitesTurn)
+                {
+                    AllowedSquares = board.AvailableSquares(name);
+                    StartSquare = name;
+                    return;
+                }
+            }
+        }
+        text = board.GetFEN();
+    }
+}
