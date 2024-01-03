@@ -106,22 +106,38 @@ code {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(8, 1fr);
-    margin: 20px auto;
+    margin: 10px auto;
 }
 
 /* If height > width (portrait orientation) */
 @media (orientation: portrait) {
     .grid-board {
-        width: 75vw;
-        height: 75vw;
+        height: 80vw;
+        width: 80vw;
+    }
+
+    .moves-tree {
+        width: 90vw;
+    }
+
+    .board-controlls {
+        width: 90vw;
     }
 }
 
 /* If width > height (landscape orientation) */
 @media (orientation: landscape) {
     .grid-board {
-        height: 65vh;
-        width: 65vh;
+        height: 80vh;
+        width: 80vh;
+    }
+
+    .moves-tree {
+        width: 90vh;
+    }
+
+    .board-controlls {
+        width: 90vh;
     }
 }
 
@@ -165,4 +181,25 @@ code {
 .AllowedSquare2 {
     background-color: #8a5227 !important;
     cursor: pointer;
+}
+
+
+.move-tree-item:hover {
+    color: #0071c1;
+    cursor: pointer;
+}
+
+.move-tree-item {
+    color: #258cfb;
+    margin: 2px;
+}
+
+.moves-tree {
+    margin: 10px auto;
+}
+
+
+.board-controlls {
+    margin: 20px auto;
+
 }

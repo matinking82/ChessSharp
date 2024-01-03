@@ -21,5 +21,48 @@ namespace ChessKing.Models.DataStructures.GameTree
             Children = new MyLinkedList<GameTreeNode>();
         }
 
+        public GameTreeNode? FindParent(GameTreeNode root)
+        {
+            if (this == root)
+            {
+                return null;
+            }
+
+            if (root.ContainsChild(this))
+            {
+                return root;
+            }
+
+            var copyhead = root.Children.Head;
+
+            for (int i = 0; i < root.Children.Count; i++)
+            {
+                var found = this.FindParent(copyhead.Data);
+
+                if (found != null)
+                {
+                    return found;
+                }
+
+                copyhead = copyhead.Next;
+            }
+
+            return null;
+        }
+
+        public bool ContainsChild(GameTreeNode node)
+        {
+            var copy = this.Children.Head;
+            for (int i = 0; i < this.Children.Count; i++)
+            {
+                if (copy.Data == node)
+                {
+                    return true;
+                }
+                copy = copy.Next;
+            }
+
+            return false;
+        }
     }
 }

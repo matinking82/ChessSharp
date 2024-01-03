@@ -29,7 +29,7 @@ namespace ChessKing.Models
         private List<List<ChessSquare>> _squares;
 
 
-        public Board(string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq")
+        public Board(string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
         {
             InitializeBoard();
             SetFEN(FEN);
@@ -333,7 +333,7 @@ namespace ChessKing.Models
         public string GetFEN()
         {
             string fen = "";
-            for (int row = 0; row < 8; row++)
+            for (int row = 7; row >= 0; row--)
             {
                 string rowfen = "";
                 int number = 0;
@@ -362,7 +362,7 @@ namespace ChessKing.Models
                 }
 
                 fen += rowfen;
-                if (row <= 7)
+                if (row > 0)
                 {
                     fen += '/';
                 }
@@ -370,11 +370,11 @@ namespace ChessKing.Models
 
             if (WhitesTurn)
             {
-                fen += " w ";
+                fen += " b ";
             }
             else
             {
-                fen += " b ";
+                fen += " w ";
             }
 
             if (WhiteShortCastle)
@@ -399,7 +399,8 @@ namespace ChessKing.Models
 
             if (EnPassantSquare != null)
             {
-                fen += " " + EnPassantSquare.PieceName + " ";
+                
+                fen += " " + "e3" + " ";
             }
             else
             {
@@ -430,6 +431,13 @@ namespace ChessKing.Models
                 Squares.Add(File);
             }
             _squares = Squares;
+        }
+
+        private string GetSquareName(ChessSquare square)
+        {
+            //TODO
+
+            return "";
         }
 
         private bool MoveSquare(string startSquare, string EndSquare, string? promote, bool checkAvailable = true)
@@ -535,10 +543,8 @@ namespace ChessKing.Models
                 StartSquare = startSquare,
                 EndSquare = EndSquare,
                 PieceName = StartChessSquare.PieceName,
-                FEN = GetFEN()
             };
 
-            Moves.NewMove(newMove);
 
             if (take)
             {
@@ -555,6 +561,9 @@ namespace ChessKing.Models
             }
 
             StartChessSquare.PieceId = null;
+
+            newMove.FEN = GetFEN();
+            Moves.NewMove(newMove);
 
             WhitesTurn = !WhitesTurn;
             return true;
@@ -1232,6 +1241,18 @@ namespace ChessKing.Models
                 }
             }
 
+            if (Temp[3]=="-")
+            {
+                EnPassantSquare = null;
+            }
+            else
+            {
+                EnPassantSquare = this[Temp[3]];
+            }
+
+            halfmoves = int.Parse(Temp[4]);
+            fullmoves = int.Parse(Temp[5]);
+
             #endregion
 
             var FenRows = Temp[0].Split('/');
@@ -1376,6 +1397,27 @@ namespace ChessKing.Models
             moves = moves.Distinct().ToList();
 
             return moves;
+        }
+
+        public void UndoMove()
+        {
+            var result = Moves.Active.FindParent(Moves.Root);
+            if (result==null)
+            {
+                return;
+            }
+
+            SetActivePosition(result);
+        }
+
+        public void RedoMove()
+        {
+            var acv = Moves.Active;
+            if (acv.Children.IsEmpty())
+            {
+                return;
+            }
+            SetActivePosition(acv.Children.Head?.Data);
         }
 
         public GameStatus Status()

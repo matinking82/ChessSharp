@@ -4,7 +4,7 @@
 
 <PageTitle>Chessazor</PageTitle>
 
-<div class="grid-board" id="Board">
+<div class="grid-board row" id="Board">
     @{
         bool check = false;
         List<string> classes = new List<string>();
@@ -61,16 +61,32 @@
     }
 </div>
 
-<span>
-    @text
-</span>
+<div class="row board-controlls">
+    <button @onclick="undo" class="col-6 btn btn-outline-warning">Undo</button>
+    <button @onclick="redo" class="col-6 btn btn-outline-primary">Redo</button>
+    <button @onclick="restart" class="col-12 btn btn-outline-danger">Restart</button>
+</div>
 
+<div class="alert alert-info moves-tree">
+    <div class="alert-heading">
+        PGN:
+    </div>
+    <MovesButton node="board.Moves.Root" board="board" update="update"></MovesButton>
+
+</div>
+
+<div class="alert alert-warning moves-tree">
+    <div class="alert-heading">
+        FEN:
+    </div>
+    <input class="form-control" value="@board.Moves.GetActiveFen()"/>
+</div>
 
 @code
 {
     Board board = new Board();
 
-    string text = "";
+
 
     List<string> AllowedSquares = new List<string>();
 
@@ -130,6 +146,30 @@
                 }
             }
         }
-        text = board.GetFEN();
+    }
+
+    async void update()
+    {
+        StateHasChanged();
+    }
+
+    void restart()
+    {
+        board = new Board();
+        StartSquare = "";
+        AllowedSquares = new List<string>();
+        StateHasChanged();
+    }
+
+    void undo()
+    {
+        board.UndoMove();
+        StateHasChanged();
+    }
+
+    void redo()
+    {
+        board.RedoMove();
+        StateHasChanged();
     }
 }
