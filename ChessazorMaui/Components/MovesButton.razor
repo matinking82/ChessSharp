@@ -2,21 +2,7 @@
 @using ChessKing.Models
 
 <span class="move-tree-item" @onclick="clicked">
-    @if (node.PieceName == "p" || node.PieceName == "P")
-    {
-        if (node.StartSquare.ElementAt(0) == node.EndSquare.ElementAt(0))
-        {
-            @node.EndSquare
-        }
-        else
-        {
-            @(node.StartSquare.ElementAt(0) + node.EndSquare)
-        }
-    }
-    else
-    {
-        @(node.PieceName?.ToUpper() + node.StartSquare + node.EndSquare)
-    }
+    @node.getPgn()
 </span>
 
 @if (node.Children.Count >= 2)

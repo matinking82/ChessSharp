@@ -1,96 +1,108 @@
 ﻿@page "/"
 @using ChessKing.Models
+@using System.Threading
 @inject IJSRuntime JsRuntime;
 
 <PageTitle>Chessazor</PageTitle>
+@if (Winner == null)
+{
 
-<div class="grid-board row" id="Board">
-    @{
-        bool check = false;
-        List<string> classes = new List<string>();
-    }
-    @for (int i = 8; i > 0; i--)
-    {
-        foreach (var file in Board.FileNames)
+    <div class="alert d-flex align-content-center justify-content-center p-1 mx-2">
+        <span class="timer-timer p-3">00:@blackTime</span>
+    </div>
+    <div class="grid-board row" id="Board">
+        @{
+            bool check = false;
+            List<string> classes = new List<string>();
+        }
+        @for (int i = 8; i > 0; i--)
         {
-            classes = new() { "ChessSquare" };
-            var name = $"{file}{i}";
-            var piece = board[name];
-
-            @if (AllowedSquares.Contains(name))
+            foreach (var file in Board.FileNames)
             {
-                if (check)
+                classes = new() { "ChessSquare" };
+                var name = $"{file}{i}";
+                var piece = board[name];
+
+                @if (check)
                 {
-                    classes.Add("AllowedSquare2");
+                    classes.Add("SquareColor2");
                 }
                 else
                 {
-                    classes.Add("AllowedSquare1");
+                    classes.Add("SquareColor1");
                 }
-            }
 
-            @if (check)
-            {
-                classes.Add("SquareColor2");
-            }
-            else
-            {
-                classes.Add("SquareColor1");
-            }
-
-            if (piece.PieceId != null)
-            {
-                classes.Add("ChessSquareFull");
-            }
-
-            @if (name == StartSquare)
-            {
-                classes.Add("SquareSelected");
-            }
-
-            <div @onclick="() => { if(piece.PieceId!=null||AllowedSquares.Contains(name)) SquareSelect(name); }" class="@(classes.Aggregate((a,b)=>a+" "+b+" "))">
-                @if (piece.PieceId != null)
+                if (piece.PieceId != null)
                 {
-                    <img src="pieces/@(Board.Pieces.IndexOf(piece.PieceName)+1).png" />
+                    classes.Add("ChessSquareFull");
                 }
-            </div>
 
+                @if (name == StartSquare)
+                {
+                    classes.Add("SquareSelected");
+                }
+                string style = "";
+                if (AllowedSquares.Contains(name))
+                {
+                    classes.Add("AllowedSquare");
+                    Random random = new Random();
+                    style = $"background-color:rgb({random.Next(0, 255)},{random.Next(0, 255)},{random.Next(0, 255)})!important";
+                }
+
+                <div style="@style" @onclick="() => { if(piece.PieceId!=null||AllowedSquares.Contains(name)) SquareSelect(name); }" class="@(classes.Aggregate((a,b)=>a+" "+b+" "))">
+                    @if (piece.PieceId != null)
+                    {
+                        <img src="pieces/@(Board.Pieces.IndexOf(piece.PieceName)+1).png" />
+                    }
+                </div>
+
+                check = !check;
+            }
             check = !check;
         }
-        check = !check;
-    }
-</div>
-
-<div class="row board-controlls">
-    <button @onclick="undo" class="col-6 btn btn-outline-warning">Undo</button>
-    <button @onclick="redo" class="col-6 btn btn-outline-primary">Redo</button>
-    <button @onclick="restart" class="col-12 btn btn-outline-danger">Restart</button>
-</div>
-
-<div class="alert alert-info moves-tree">
-    <div class="alert-heading">
-        PGN:
     </div>
-    <MovesButton node="board.Moves.Root" board="board" update="update"></MovesButton>
-
-</div>
-
-<div class="alert alert-warning moves-tree">
-    <div class="alert-heading">
-        FEN:
+    <div class="alert d-flex align-content-center justify-content-center p-1 mx-2">
+        <span class="timer-timer p-3">00:@whiteTime</span>
     </div>
-    <input class="form-control" value="@board.Moves.GetActiveFen()"/>
-</div>
+
+    <div class="row board-controlls">
+        <button @onclick="undo" class="col-6 btn btn-outline-warning">Undo</button>
+        <button @onclick="redo" class="col-6 btn btn-outline-primary">Redo</button>
+        <button @onclick="restart" class="col-12 btn btn-outline-danger">Restart</button>
+    </div>
+
+    <div class="alert alert-info moves-tree">
+        <div class="alert-heading">
+            PGN:
+        </div>
+        <MovesButton node="board.Moves.Root" board="board" update="update"></MovesButton>
+
+    </div>
+
+    <div class="alert alert-warning moves-tree">
+        <div class="alert-heading">
+            FEN:
+        </div>
+        <input class="form-control" value="@board.Moves.GetActiveFen()" />
+    </div>
+}
+else
+{
+    <span>Winner is : @(Winner.Value ? "White" : "Black")</span>
+}
 
 @code
 {
     Board board = new Board();
 
-
-
+    int blackTime = 0;
+    int whiteTime = 0;
     List<string> AllowedSquares = new List<string>();
 
+    Timer timer;
     string StartSquare = "";
+    bool isGameOn = true;
+    bool? Winner = null;
 
     void SquareSelect(string name)
     {
@@ -131,11 +143,21 @@
                         pgnmove = $"{stsquare.PieceName.ToUpper()}{StartSquare}{name}";
                     }
 
+                    bool turn = board.WhitesTurn;
                     var status = board.Move(pgnmove);
                     if (status)
                     {
                         StartSquare = "";
                         AllowedSquares = new();
+                        if (turn)
+                        {
+                            whiteTime = 30;
+                        }
+                        else
+                        {
+                            blackTime = 30;
+                        }
+                        checkWin();
                     }
                 }
                 else if (board.IsWhitePiece(square) == board.WhitesTurn)
@@ -150,6 +172,8 @@
 
     async void update()
     {
+        AllowedSquares = new List<string>();
+        StartSquare = "";
         StateHasChanged();
     }
 
@@ -158,18 +182,92 @@
         board = new Board();
         StartSquare = "";
         AllowedSquares = new List<string>();
+        Winner = null;
+        isGameOn = true;
+        whiteTime = 30;
+        blackTime = 30;
         StateHasChanged();
     }
 
     void undo()
     {
         board.UndoMove();
+        AllowedSquares = new List<string>();
+        StartSquare = "";
         StateHasChanged();
     }
 
     void redo()
     {
         board.RedoMove();
+        AllowedSquares = new List<string>();
+        StartSquare = "";
         StateHasChanged();
+    }
+
+    void TimerEverySecond(object? obj)
+    {
+        if (!isGameOn)
+        {
+            return;
+        }
+
+        if (board.WhitesTurn)
+        {
+            whiteTime--;
+        }
+        else
+        {
+            blackTime--;
+        }
+
+        if (whiteTime <= 0)
+        {
+            Win(false);
+        }
+
+        if (blackTime <= 0)
+        {
+            Win(true);
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        blackTime = 30;
+        whiteTime = 30;
+        timer = new Timer(TimerEverySecond, null, 0, 1000);
+    }
+
+
+    void Win(bool IsWhite)
+    {
+        isGameOn = false;
+        Winner = IsWhite;
+    }
+
+    void checkWin()
+    {
+        var status = board.Status();
+
+        switch (status)
+        {
+            case GameStatus.BlackMate:
+                Win(false);
+                break;
+
+            case GameStatus.WhiteMate:
+                Win(true);
+                break;
+
+            case GameStatus.StaleMate:
+                isGameOn = false;
+                break;
+
+            default:
+                break;
+        }
     }
 }

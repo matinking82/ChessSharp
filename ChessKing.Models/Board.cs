@@ -399,8 +399,7 @@ namespace ChessKing.Models
 
             if (EnPassantSquare != null)
             {
-                
-                fen += " " + "e3" + " ";
+                fen += " " + GetName(EnPassantSquare) + " ";
             }
             else
             {
@@ -454,6 +453,7 @@ namespace ChessKing.Models
                 }
             }
 
+            bool enTake = GetName(EnPassantSquare) == EndSquare;
             EnPassantSquare = null;
 
 
@@ -546,7 +546,7 @@ namespace ChessKing.Models
             };
 
 
-            if (take)
+            if (take || enTake)
             {
                 halfmoves = 0;
             }
@@ -1241,7 +1241,7 @@ namespace ChessKing.Models
                 }
             }
 
-            if (Temp[3]=="-")
+            if (Temp[3] == "-")
             {
                 EnPassantSquare = null;
             }
@@ -1369,6 +1369,23 @@ namespace ChessKing.Models
             return $"{FileNames[Coordinate.Item1]}{Coordinate.Item2 + 1}";
         }
 
+        private string GetName(ChessSquare square)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    var name = GetSquareName(new Tuple<int, int>(i, j));
+                    if (this[name] == square)
+                    {
+                        return name;
+                    }
+                }
+            }
+
+            return "-";
+        }
+
         private List<string> GetAllAvailableMovesForColor(bool white = true)
         {
             List<string> moves = new List<string>();
@@ -1402,7 +1419,7 @@ namespace ChessKing.Models
         public void UndoMove()
         {
             var result = Moves.Active.FindParent(Moves.Root);
-            if (result==null)
+            if (result == null)
             {
                 return;
             }

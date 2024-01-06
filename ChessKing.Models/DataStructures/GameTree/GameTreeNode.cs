@@ -64,5 +64,50 @@ namespace ChessKing.Models.DataStructures.GameTree
 
             return false;
         }
+
+        public string getPgn()
+        {
+            string mid = FEN.Split(' ').ElementAt(4) == "0" ? "x" : "";
+            if (this.PieceName == "p" || this.PieceName == "P")
+            {
+                if (this.StartSquare.ElementAt(0) == this.EndSquare.ElementAt(0))
+                {
+                    return this.EndSquare;
+                }
+                else
+                {
+                    return this.StartSquare.ElementAt(0) + mid + this.EndSquare;
+                }
+            }
+
+            if (this.PieceName == "k" || this.PieceName == "K")
+            {
+                if (StartSquare == "e1")
+                {
+                    if (EndSquare == "g1")
+                    {
+                        return "O-O";
+                    }
+                    else if (EndSquare == "c1")
+                    {
+                        return "O-O-O";
+                    }
+                }
+
+                if (StartSquare == "e8")
+                {
+                    if (EndSquare == "g8")
+                    {
+                        return "O-O";
+                    }
+                    else if (EndSquare == "c8")
+                    {
+                        return "O-O-O";
+                    }
+                }
+            }
+
+            return this.PieceName?.ToUpper() + this.StartSquare + mid + this.EndSquare;
+        }
     }
 }

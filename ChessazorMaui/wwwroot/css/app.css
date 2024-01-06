@@ -123,6 +123,9 @@ code {
     .board-controlls {
         width: 90vw;
     }
+    .timer-section {
+        width: 90vw
+    }
 }
 
 /* If width > height (landscape orientation) */
@@ -137,6 +140,9 @@ code {
     }
 
     .board-controlls {
+        width: 90vh;
+    }
+    .timer-section {
         width: 90vh;
     }
 }
@@ -173,13 +179,7 @@ code {
     background-color: aquamarine !important;
 }
 
-.AllowedSquare1 {
-    background-color: #fb9552 !important;
-    cursor: pointer;
-}
-
-.AllowedSquare2 {
-    background-color: #8a5227 !important;
+.AllowedSquare {
     cursor: pointer;
 }
 
@@ -202,4 +202,12 @@ code {
 .board-controlls {
     margin: 20px auto;
 
+}
+
+.timer-timer {
+    background-color: #e0e0e0;
+}
+
+.timer-section {
+    margin: 20px auto;
 }
