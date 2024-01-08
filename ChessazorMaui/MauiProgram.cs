@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using ChessazorMaui.Services;
+using Microsoft.Extensions.Logging;
 
 namespace ChessazorMaui
 {
@@ -15,6 +16,7 @@ namespace ChessazorMaui
                 });
 
             builder.Services.AddMauiBlazorWebView();
+            builder.Services.AddSingleton<LogServices>();
 
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();

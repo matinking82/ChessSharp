@@ -543,6 +543,7 @@ namespace ChessKing.Models
                 StartSquare = startSquare,
                 EndSquare = EndSquare,
                 PieceName = StartChessSquare.PieceName,
+                Promote = promote == null ? "" : promote
             };
 
 
@@ -1416,6 +1417,11 @@ namespace ChessKing.Models
             return moves;
         }
 
+        public string GetPgn()
+        {
+            return Moves.GetAllPgn(Moves.Root, 0, false);
+        }
+
         public void UndoMove()
         {
             var result = Moves.Active.FindParent(Moves.Root);
@@ -1465,6 +1471,11 @@ namespace ChessKing.Models
 
                 return GameStatus.Playing;
             }
+        }
+
+        public PiecesCount GetPiecesCount()
+        {
+            return Moves.Active.GetPiecesCount();
         }
 
         private enum pgnType

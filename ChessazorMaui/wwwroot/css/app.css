@@ -123,9 +123,18 @@ code {
     .board-controlls {
         width: 90vw;
     }
+
     .timer-section {
         width: 90vw
     }
+
+    .promote-selector {
+        width: 90vw;
+    }
+
+        .promote-selector img {
+            height: 10vw;
+        }
 }
 
 /* If width > height (landscape orientation) */
@@ -142,9 +151,18 @@ code {
     .board-controlls {
         width: 90vh;
     }
+
     .timer-section {
         width: 90vh;
     }
+
+    .promote-selector {
+        width: 90vh;
+    }
+
+        .promote-selector img {
+            height: 10vh;
+        }
 }
 
 .ChessSquare img {
@@ -201,7 +219,6 @@ code {
 
 .board-controlls {
     margin: 20px auto;
-
 }
 
 .timer-timer {
@@ -210,4 +227,17 @@ code {
 
 .timer-section {
     margin: 20px auto;
+}
+
+.promote-selector {
+    margin: 10px auto;
+}
+
+.promote-selector img {
+    cursor: pointer;
+    outline: 1px solid black;
+}
+
+.promote-selector img:hover {
+    background-color: #e0e0e0;
 }

@@ -1,12 +1,31 @@
 ﻿@page "/"
 @using ChessKing.Models
 @using System.Threading
-@inject IJSRuntime JsRuntime;
+@using ChessazorMaui.Services
+@inject LogServices _logServices;
 
 <PageTitle>Chessazor</PageTitle>
+@if (promotingPgn != "")
+{
+    <div class="row promote-selector p-3 bg-secondary rounded-2">
+        <h3 class="col-12">Select a piece to promote:</h3>
+        <div class="col-3">
+            <img class="img-thumbnail" src="pieces/@(board.WhitesTurn ? "2" : "8").png" @onclick="() => { promoteClicked('N'); }" />
+        </div>
+        <div class="col-3">
+            <img class="img-thumbnail" src="pieces/@(board.WhitesTurn ? "3" : "9").png" @onclick="() => {promoteClicked('B');}" />
+        </div>
+        <div class="col-3">
+            <img class="img-thumbnail" src="pieces/@(board.WhitesTurn ? "4" : "10").png" @onclick="() => {promoteClicked('R');}" />
+        </div>
+        <div class="col-3">
+            <img class="img-thumbnail" src="pieces/@(board.WhitesTurn ? "5" : "11").png" @onclick="() => {promoteClicked('Q');}" />
+        </div>
+    </div>
+}
+
 @if (Winner == null)
 {
-
     <div class="alert d-flex align-content-center justify-content-center p-1 mx-2">
         <span class="timer-timer p-3">00:@blackTime</span>
     </div>
@@ -69,13 +88,14 @@
         <button @onclick="undo" class="col-6 btn btn-outline-warning">Undo</button>
         <button @onclick="redo" class="col-6 btn btn-outline-primary">Redo</button>
         <button @onclick="restart" class="col-12 btn btn-outline-danger">Restart</button>
+        <button @onclick="export" class="col-12 btn btn-success">Export</button>
     </div>
 
     <div class="alert alert-info moves-tree">
         <div class="alert-heading">
             PGN:
         </div>
-        <MovesButton node="board.Moves.Root" board="board" update="update"></MovesButton>
+        <MovesButton node="board.Moves.Root" board="board" move="0" white="false" update="update"></MovesButton>
 
     </div>
 
@@ -84,6 +104,16 @@
             FEN:
         </div>
         <input class="form-control" value="@board.Moves.GetActiveFen()" />
+    </div>
+
+    <div class="alert alert-dark text-white bg-dark">
+        <div class="alert-heading">
+            Destroyed Pieces:
+        </div>
+
+        <span>
+            @destroyedPiecesText
+        </span>
     </div>
 }
 else
@@ -95,17 +125,23 @@ else
 {
     Board board = new Board();
 
-    int blackTime = 0;
-    int whiteTime = 0;
+    public static int blackTime = 0;
+    public static int whiteTime = 0;
     List<string> AllowedSquares = new List<string>();
 
     Timer timer;
     string StartSquare = "";
     bool isGameOn = true;
     bool? Winner = null;
-
+    string promotingPgn = "";
+    string destroyedPiecesText = "";
     void SquareSelect(string name)
     {
+        if (promotingPgn != "")
+        {
+            return;
+        }
+
         var square = board[name];
 
         if (string.IsNullOrEmpty(StartSquare))
@@ -137,6 +173,12 @@ else
                         {
                             pgnmove = StartSquare.Substring(0, 1) + pgnmove;
                         }
+
+                        if (name.ElementAt(1) == '1' || name.ElementAt(1) == '8')
+                        {
+                            promotingPgn = pgnmove;
+                            return;
+                        }
                     }
                     else
                     {
@@ -158,6 +200,7 @@ else
                             blackTime = 30;
                         }
                         checkWin();
+                        updateDestroyedPieces();
                     }
                 }
                 else if (board.IsWhitePiece(square) == board.WhitesTurn)
@@ -184,6 +227,8 @@ else
         AllowedSquares = new List<string>();
         Winner = null;
         isGameOn = true;
+        promotingPgn = "";
+        destroyedPiecesText = "";
         whiteTime = 30;
         blackTime = 30;
         StateHasChanged();
@@ -194,6 +239,8 @@ else
         board.UndoMove();
         AllowedSquares = new List<string>();
         StartSquare = "";
+        whiteTime = 30;
+        blackTime = 30;
         StateHasChanged();
     }
 
@@ -202,6 +249,8 @@ else
         board.RedoMove();
         AllowedSquares = new List<string>();
         StartSquare = "";
+        whiteTime = 30;
+        blackTime = 30;
         StateHasChanged();
     }
 
@@ -269,5 +318,100 @@ else
             default:
                 break;
         }
+    }
+
+    void updateDestroyedPieces()
+    {
+        var pieces = board.GetPiecesCount();
+        string res = "White: ";
+
+        if (8 - pieces.WhitePawn != 0)
+        {
+            res += "Pawn x" + (8 - pieces.WhitePawn) + " ";
+        }
+
+        if (2 - pieces.WhiteKnight != 0)
+        {
+            res += "Knight x" + (2 - pieces.WhiteKnight) + " ";
+        }
+
+        if (2 - pieces.WhiteBishop != 0)
+        {
+            res += "Bishop x" + (2 - pieces.WhiteBishop) + " ";
+        }
+
+        if (2 - pieces.WhiteRook != 0)
+        {
+            res += "Rook x" + (2 - pieces.WhiteRook) + " ";
+        }
+
+        if (1 - pieces.WhiteQueen != 0)
+        {
+            res += "Queen x" + (2 - pieces.WhiteQueen) + " ";
+        }
+
+        res += "\nBlack: ";
+
+        if (8 - pieces.BlackPawn != 0)
+        {
+            res += "Pawn x" + (8 - pieces.BlackPawn) + " ";
+        }
+
+        if (2 - pieces.WhiteKnight != 0)
+        {
+            res += "Knight x" + (2 - pieces.BlackKnight) + " ";
+        }
+
+        if (2 - pieces.WhiteBishop != 0)
+        {
+            res += "Bishop x" + (2 - pieces.BlackBishop) + " ";
+        }
+
+        if (2 - pieces.WhiteRook != 0)
+        {
+            res += "Rook x" + (2 - pieces.BlackRook) + " ";
+        }
+
+        if (1 - pieces.WhiteQueen != 0)
+        {
+            res += "Queen x" + (2 - pieces.BlackQueen) + " ";
+        }
+
+
+        destroyedPiecesText = res;
+    }
+
+    void promoteClicked(char piece)
+    {
+        if (promotingPgn == "")
+        {
+            return;
+        }
+
+        string move = promotingPgn + $"={piece}";
+        promotingPgn = "";
+        bool turn = board.WhitesTurn;
+        var status = board.Move(move);
+        if (status)
+        {
+            StartSquare = "";
+            AllowedSquares = new();
+            if (turn)
+            {
+                whiteTime = 30;
+            }
+            else
+            {
+                blackTime = 30;
+            }
+            checkWin();
+        }
+    }
+
+    async void export()
+    {
+        string pgn = board.GetPgn();
+
+        await _logServices.SaveLog(pgn);
     }
 }

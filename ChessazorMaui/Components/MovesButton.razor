@@ -1,8 +1,9 @@
 ﻿@using ChessKing.Models.DataStructures.GameTree
 @using ChessKing.Models
+@using ChessazorMaui.Components.Pages
 
 <span class="move-tree-item" @onclick="clicked">
-    @node.getPgn()
+    @((white ? $"{move}. " : "") + (node.getPgn() == "x" ? "start" : node.getPgn()))
 </span>
 
 @if (node.Children.Count >= 2)
@@ -13,7 +14,7 @@
         copyHead = copyHead.Next;
 
         <span>(</span>
-        <MovesButton node="copyHead.Data" board="board" update="update"></MovesButton>
+        <MovesButton node="copyHead.Data" board="board" move="@(white? move:move+1)" white="!white" update="update"></MovesButton>
         <span>)</span>
     }
 
@@ -21,7 +22,7 @@
 
 @if (node.Children.Head != null)
 {
-    <MovesButton node="node.Children.Head.Data" board="board" update="update"></MovesButton>
+    <MovesButton node="node.Children.Head.Data" board="board" move="@(white? move:move+1)" white="!white" update="update"></MovesButton>
 }
 
 @code {
@@ -34,9 +35,17 @@
     [Parameter]
     public EventCallback update { get; set; }
 
+    [Parameter]
+    public int move { get; set; }
+
+    [Parameter]
+    public bool white { get; set; }
+
     async void clicked()
     {
         board.SetActivePosition(node);
+        Home.whiteTime = 30;
+        Home.blackTime = 30;
         await update.InvokeAsync();
     }
 }
