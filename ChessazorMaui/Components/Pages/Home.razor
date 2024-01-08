@@ -24,102 +24,111 @@
     </div>
 }
 
-@if (Winner == null)
+@if (Winner != null)
 {
-    <div class="alert d-flex align-content-center justify-content-center p-1 mx-2">
-        <span class="timer-timer p-3">00:@blackTime</span>
+    <div class="blur-page">
+        <div class="container mt-5">
+            <div class="row mt-5">
+                <div class="col-3 mt-5"></div>
+                <h1 class="text-white col-6">@(Winner.Value ? "White" : "Black") Is Winner!!</h1>
+                <div class="col-3"></div>
+                <div class="col-3"></div>
+                <button class="btn btn-primary col-6" @onclick="btnGotItClicked">Got it</button>
+                <div class="col-3"></div>
+            </div>
+        </div>
     </div>
-    <div class="grid-board row" id="Board">
-        @{
-            bool check = false;
-            List<string> classes = new List<string>();
-        }
-        @for (int i = 8; i > 0; i--)
+}
+
+<div class="alert d-flex align-content-center justify-content-center p-1 mx-2">
+    <span class="timer-timer p-3">00:@blackTime</span>
+</div>
+<div class="grid-board row" id="Board">
+    @{
+        bool check = false;
+        List<string> classes = new List<string>();
+    }
+    @for (int i = 8; i > 0; i--)
+    {
+        foreach (var file in Board.FileNames)
         {
-            foreach (var file in Board.FileNames)
+            classes = new() { "ChessSquare" };
+            var name = $"{file}{i}";
+            var piece = board[name];
+
+            @if (check)
             {
-                classes = new() { "ChessSquare" };
-                var name = $"{file}{i}";
-                var piece = board[name];
-
-                @if (check)
-                {
-                    classes.Add("SquareColor2");
-                }
-                else
-                {
-                    classes.Add("SquareColor1");
-                }
-
-                if (piece.PieceId != null)
-                {
-                    classes.Add("ChessSquareFull");
-                }
-
-                @if (name == StartSquare)
-                {
-                    classes.Add("SquareSelected");
-                }
-                string style = "";
-                if (AllowedSquares.Contains(name))
-                {
-                    classes.Add("AllowedSquare");
-                    Random random = new Random();
-                    style = $"background-color:rgb({random.Next(0, 255)},{random.Next(0, 255)},{random.Next(0, 255)})!important";
-                }
-
-                <div style="@style" @onclick="() => { if(piece.PieceId!=null||AllowedSquares.Contains(name)) SquareSelect(name); }" class="@(classes.Aggregate((a,b)=>a+" "+b+" "))">
-                    @if (piece.PieceId != null)
-                    {
-                        <img src="pieces/@(Board.Pieces.IndexOf(piece.PieceName)+1).png" />
-                    }
-                </div>
-
-                check = !check;
+                classes.Add("SquareColor2");
             }
+            else
+            {
+                classes.Add("SquareColor1");
+            }
+
+            if (piece.PieceId != null)
+            {
+                classes.Add("ChessSquareFull");
+            }
+
+            @if (name == StartSquare)
+            {
+                classes.Add("SquareSelected");
+            }
+            string style = "";
+            if (AllowedSquares.Contains(name))
+            {
+                classes.Add("AllowedSquare");
+                Random random = new Random();
+                style = $"background-color:rgb({random.Next(0, 255)},{random.Next(0, 255)},{random.Next(0, 255)})!important";
+            }
+
+            <div style="@style" @onclick="() => { if(piece.PieceId!=null||AllowedSquares.Contains(name)) SquareSelect(name); }" class="@(classes.Aggregate((a,b)=>a+" "+b+" "))">
+                @if (piece.PieceId != null)
+                {
+                    <img src="pieces/@(Board.Pieces.IndexOf(piece.PieceName)+1).png" />
+                }
+            </div>
+
             check = !check;
         }
+        check = !check;
+    }
+</div>
+<div class="alert d-flex align-content-center justify-content-center p-1 mx-2">
+    <span class="timer-timer p-3">00:@whiteTime</span>
+</div>
+
+<div class="row board-controlls">
+    <button @onclick="undo" class="col-6 btn btn-outline-warning">Undo</button>
+    <button @onclick="redo" class="col-6 btn btn-outline-primary">Redo</button>
+    <button @onclick="restart" class="col-12 btn btn-outline-danger">Restart</button>
+    <button @onclick="export" class="col-12 btn btn-success">Export</button>
+</div>
+
+<div class="alert alert-info moves-tree">
+    <div class="alert-heading">
+        PGN:
     </div>
-    <div class="alert d-flex align-content-center justify-content-center p-1 mx-2">
-        <span class="timer-timer p-3">00:@whiteTime</span>
+    <MovesButton node="board.Moves.Root" board="board" move="0" white="false" update="update"></MovesButton>
+
+</div>
+
+<div class="alert alert-warning moves-tree">
+    <div class="alert-heading">
+        FEN:
+    </div>
+    <input class="form-control" value="@board.Moves.GetActiveFen()" />
+</div>
+
+<div class="alert alert-dark text-white bg-dark set-width">
+    <div class="alert-heading">
+        Destroyed Pieces:
     </div>
 
-    <div class="row board-controlls">
-        <button @onclick="undo" class="col-6 btn btn-outline-warning">Undo</button>
-        <button @onclick="redo" class="col-6 btn btn-outline-primary">Redo</button>
-        <button @onclick="restart" class="col-12 btn btn-outline-danger">Restart</button>
-        <button @onclick="export" class="col-12 btn btn-success">Export</button>
-    </div>
-
-    <div class="alert alert-info moves-tree">
-        <div class="alert-heading">
-            PGN:
-        </div>
-        <MovesButton node="board.Moves.Root" board="board" move="0" white="false" update="update"></MovesButton>
-
-    </div>
-
-    <div class="alert alert-warning moves-tree">
-        <div class="alert-heading">
-            FEN:
-        </div>
-        <input class="form-control" value="@board.Moves.GetActiveFen()" />
-    </div>
-
-    <div class="alert alert-dark text-white bg-dark">
-        <div class="alert-heading">
-            Destroyed Pieces:
-        </div>
-
-        <span>
-            @destroyedPiecesText
-        </span>
-    </div>
-}
-else
-{
-    <span>Winner is : @(Winner.Value ? "White" : "Black")</span>
-}
+    <span>
+        @destroyedPiecesText
+    </span>
+</div>
 
 @code
 {
@@ -137,7 +146,7 @@ else
     string destroyedPiecesText = "";
     void SquareSelect(string name)
     {
-        if (promotingPgn != "")
+        if (promotingPgn != "" || !isGameOn)
         {
             return;
         }
@@ -406,6 +415,11 @@ else
             }
             checkWin();
         }
+    }
+
+    void btnGotItClicked()
+    {
+        Winner = null;
     }
 
     async void export()

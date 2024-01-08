@@ -132,6 +132,10 @@ code {
         width: 90vw;
     }
 
+    .set-width {
+        width: 90vw;
+    }
+
         .promote-selector img {
             height: 10vw;
         }
@@ -157,6 +161,10 @@ code {
     }
 
     .promote-selector {
+        width: 90vh;
+    }
+
+    .set-width {
         width: 90vh;
     }
 
@@ -233,11 +241,24 @@ code {
     margin: 10px auto;
 }
 
-.promote-selector img {
-    cursor: pointer;
-    outline: 1px solid black;
+    .promote-selector img {
+        cursor: pointer;
+        outline: 1px solid black;
+    }
+
+        .promote-selector img:hover {
+            background-color: #e0e0e0;
+        }
+
+.blur-page {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    position: absolute;
+    z-index: 100;
 }
 
-.promote-selector img:hover {
-    background-color: #e0e0e0;
+.set-width {
+    margin: 20px auto;
 }
