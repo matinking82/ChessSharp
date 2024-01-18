@@ -173,18 +173,18 @@ namespace ChessKing.Models.DataStructures.GameTree
 
     public record PiecesCount
     {
-        public int WhitePawn { get; set; }
-        public int WhiteQueen { get; set; }
-        public int WhiteRook { get; set; }
-        public int WhiteBishop { get; set; }
-        public int WhiteKnight { get; set; }
-        public int WhiteKing { get; set; }
+        public int WhitePawn { get; set; } = 0;
+        public int WhiteQueen { get; set; } = 0;
+        public int WhiteRook { get; set; } = 0;
+        public int WhiteBishop { get; set; } = 0;
+        public int WhiteKnight { get; set; } = 0;
+        public int WhiteKing { get; set; } = 0;
 
-        public int BlackPawn { get; set; }
-        public int BlackQueen { get; set; }
-        public int BlackRook { get; set; }
-        public int BlackBishop { get; set; }
-        public int BlackKnight { get; set; }
-        public int BlackKing { get; set; }
+        public int BlackPawn { get; set; } = 0;
+        public int BlackQueen { get; set; } = 0;
+        public int BlackRook { get; set; } = 0;
+        public int BlackBishop { get; set; } = 0;
+        public int BlackKnight { get; set; } = 0;
+        public int BlackKing { get; set; } = 0;
     }
 }

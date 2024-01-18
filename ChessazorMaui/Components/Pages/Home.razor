@@ -354,9 +354,9 @@
             res += "Rook x" + (2 - pieces.WhiteRook) + " ";
         }
 
-        if (1 - pieces.WhiteQueen != 0)
+        if (1 - pieces.WhiteQueen != 0 && 1 - pieces.WhiteQueen > 0)
         {
-            res += "Queen x" + (2 - pieces.WhiteQueen) + " ";
+            res += "Queen x" + (1 - pieces.WhiteQueen) + " ";
         }
 
         res += "\nBlack: ";
@@ -366,24 +366,24 @@
             res += "Pawn x" + (8 - pieces.BlackPawn) + " ";
         }
 
-        if (2 - pieces.WhiteKnight != 0)
+        if (2 - pieces.BlackKnight != 0)
         {
             res += "Knight x" + (2 - pieces.BlackKnight) + " ";
         }
 
-        if (2 - pieces.WhiteBishop != 0)
+        if (2 - pieces.BlackBishop != 0)
         {
             res += "Bishop x" + (2 - pieces.BlackBishop) + " ";
         }
 
-        if (2 - pieces.WhiteRook != 0)
+        if (2 - pieces.BlackRook != 0)
         {
             res += "Rook x" + (2 - pieces.BlackRook) + " ";
         }
 
-        if (1 - pieces.WhiteQueen != 0)
+        if (1 - pieces.BlackQueen != 0 && 1 - pieces.BlackQueen > 0)
         {
-            res += "Queen x" + (2 - pieces.BlackQueen) + " ";
+            res += "Queen x" + (1 - pieces.BlackQueen) + " ";
         }
 
 
